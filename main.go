@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -11,9 +12,12 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-type CommandResponse struct {
-	Command string `json:"command"`
+type Config struct {
+	OpenAIAPIToken string `json:"openai_api_token"`
+	Model          string `json:"model"`
 }
+
+const configFileName = "genshell_config.json"
 
 func main() {
 	description := flag.String("d", "", "Description of the command to generate")
@@ -21,24 +25,78 @@ func main() {
 
 	flag.Parse()
 
-	if *description == "" {
-		fmt.Println("Please provide a description for the bash command using -d flag.")
+	// Subcommands
+	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
+	apiToken := configCmd.String("api-token", "", "Your OpenAI API token")
+	model := configCmd.String("model", "gpt-3.5-turbo", "The OpenAI model to use")
+
+	// Check which subcommand is invoked.
+	if len(os.Args) < 2 {
+		fmt.Println("expected 'config' subcommand or options '-d' and '-e'")
 		os.Exit(1)
 	}
 
-	bashCommand, err := generateBashCommand(*description)
+	switch os.Args[1] {
+	case "config":
+		handleConfigSubcommand(configCmd, apiToken, model)
+	default:
+		// Handle the default case where a subcommand is not provided
+		if *description == "" {
+			fmt.Println("Please provide a description for the command using -d flag.")
+			os.Exit(1)
+		}
 
+		bashCommand, err := generateBashCommand(*description)
+		if err != nil {
+			fmt.Printf("Error generating bash command: %s\n", err)
+			os.Exit(1)
+		}
+
+		if *execute {
+			executeBashCommand(bashCommand)
+		} else {
+			fmt.Println(bashCommand)
+		}
+	}
+
+}
+
+func handleConfigSubcommand(configCmd *flag.FlagSet, apiToken *string, model *string) {
+	configCmd.Parse(os.Args[2:])
+	if *apiToken == "" || *model == "" {
+		fmt.Println("You must provide both an API token and a model to configure the tool.")
+		os.Exit(1)
+	}
+	cfg := Config{
+		OpenAIAPIToken: *apiToken,
+		Model:          *model,
+	}
+	err := SaveConfig(cfg)
 	if err != nil {
-		fmt.Printf("Error generating bash command: %s\n", err)
+		fmt.Printf("Error saving configuration: %s\n", err)
 		os.Exit(1)
 	}
+	fmt.Println("Configuration saved successfully.")
+}
 
-	if *execute {
-		executeBashCommand(bashCommand)
-	} else {
-		fmt.Println(bashCommand)
+// SaveConfig saves the configuration to a file.
+func SaveConfig(cfg Config) error {
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
 	}
+	return os.WriteFile(configFileName, data, 0600)
+}
 
+// LoadConfig loads the configuration from a file.
+func LoadConfig() (Config, error) {
+	var cfg Config
+	data, err := os.ReadFile(configFileName)
+	if err != nil {
+		return cfg, err
+	}
+	err = json.Unmarshal(data, &cfg)
+	return cfg, err
 }
 
 type ShellInfo struct {
@@ -78,17 +136,22 @@ func executeBashCommand(commandStr string) {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("Error executing command: %s\n", err)
-		fmt.Printf("Command output: %s\n", string(out))
+		fmt.Print(string(out))
 		return
 	}
 
-	fmt.Printf("Command output: %s\n", string(out))
+	fmt.Print(string(out))
 }
 
 func generateBashCommand(description string) (string, error) {
+	cfg, err := LoadConfig()
+	if err != nil {
+		fmt.Printf("Error loading configuration: %s\n", err)
+		return "", err
+	}
 	shellInfo := getShellInfo()
 	osName := runtime.GOOS
-	openAIAPIKey := os.Getenv("OPENAI_API_KEY")
+	openAIAPIKey := cfg.OpenAIAPIToken
 	client := openai.NewClient(openAIAPIKey)
 	systemMessage := fmt.Sprintf("You are a smart bot that can generate %s commands on %s from a description provided by user.", shellInfo.FriendlyName, osName)
 	resp, err := client.CreateChatCompletion(
