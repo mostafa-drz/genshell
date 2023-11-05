@@ -17,6 +17,11 @@ type Config struct {
 	Model          string `json:"model"`
 }
 
+type ShellInfo struct {
+	Executable   string
+	FriendlyName string
+}
+
 const configFileName = "genshell_config.json"
 
 func main() {
@@ -97,11 +102,6 @@ func LoadConfig() (Config, error) {
 	}
 	err = json.Unmarshal(data, &cfg)
 	return cfg, err
-}
-
-type ShellInfo struct {
-	Executable   string
-	FriendlyName string
 }
 
 func getShellInfo() ShellInfo {
