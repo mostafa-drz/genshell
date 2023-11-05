@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"runtime"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -41,24 +41,56 @@ func main() {
 
 }
 
-func executeBashCommand(bashCommand string) {
-	parts := strings.Fields(bashCommand)
-	cmd := parts[0]
-	args := parts[1:]
-	out, err := exec.Command(cmd, args...).CombinedOutput()
+type ShellInfo struct {
+	Executable   string
+	FriendlyName string
+}
 
+func getShellInfo() ShellInfo {
+	switch runtime.GOOS {
+	case "windows":
+		return ShellInfo{"powershell", "Windows PowerShell"}
+	default:
+		shell := os.Getenv("SHELL")
+		switch shell {
+		case "/bin/bash":
+			return ShellInfo{"bash", "Bash"}
+		case "/bin/zsh":
+			return ShellInfo{"zsh", "Zsh"}
+		case "/bin/fish":
+			return ShellInfo{"fish", "Fish"}
+		default:
+			return ShellInfo{"sh", "Unix shell"} // default to sh if SHELL is not set
+		}
+	}
+}
+
+func executeBashCommand(commandStr string) {
+	shellInfo := getShellInfo()
+
+	var cmd *exec.Cmd
+	if shellInfo.Executable == "powershell" {
+		cmd = exec.Command(shellInfo.Executable, "-Command", commandStr)
+	} else {
+		cmd = exec.Command(shellInfo.Executable, "-c", commandStr)
+	}
+
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf("Error executing command: %s\n%s", err, out)
+		fmt.Printf("Error executing command: %s\n", err)
+		fmt.Printf("Command output: %s\n", string(out))
 		return
 	}
 
-	fmt.Printf("%s", out)
-
+	fmt.Printf("Command output: %s\n", string(out))
 }
 
 func generateBashCommand(description string) (string, error) {
+	shellInfo := getShellInfo()
+	osName := runtime.GOOS
 	openAIAPIKey := os.Getenv("OPENAI_API_KEY")
 	client := openai.NewClient(openAIAPIKey)
+	systemMessage := fmt.Sprintf("You are a smart bot that can generate %s commands on %s from a description provided by user.", shellInfo.FriendlyName, osName)
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
@@ -66,7 +98,7 @@ func generateBashCommand(description string) (string, error) {
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a smart bot that can generate bash commands from a description provided by user.",
+					Content: systemMessage,
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
