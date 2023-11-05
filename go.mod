@@ -1,4 +1,4 @@
-module bashi
+module genshell
 
 go 1.21.3
 
