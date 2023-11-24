@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -25,9 +26,7 @@ type ShellInfo struct {
 const configFileName = "genshell_config.json"
 
 func main() {
-	description := flag.String("d", "", "Description of the command to generate")
 	execute := flag.Bool("e", false, "Execute the command")
-
 	flag.Parse()
 
 	// Subcommands
@@ -45,13 +44,14 @@ func main() {
 	case "config":
 		handleConfigSubcommand(configCmd, apiToken, model)
 	default:
-		// Handle the default case where a subcommand is not provided
-		if *description == "" {
-			fmt.Println("Please provide a description for the command using -d flag.")
+		// The default case now assumes the remaining arguments are the description
+		description := strings.Join(flag.Args(), " ")
+		if description == "" {
+			fmt.Println("Please provide a description for the command.")
 			os.Exit(1)
 		}
 
-		bashCommand, err := generateBashCommand(*description)
+		bashCommand, err := generateBashCommand(description)
 		if err != nil {
 			fmt.Printf("Error generating bash command: %s\n", err)
 			os.Exit(1)
