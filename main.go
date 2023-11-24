@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -23,6 +25,7 @@ type ShellInfo struct {
 	FriendlyName string
 }
 
+const configDirectoryName = ".genshell"
 const configFileName = "genshell_config.json"
 
 func main() {
@@ -99,13 +102,15 @@ func saveConfig(cfg Config) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(configFileName, data, 0600)
+	configFilePath := getConfigFilePath()
+	return os.WriteFile(configFilePath, data, 0600)
 }
 
 // LoadConfig loads the configuration from a file.
 func loadConfig() (Config, error) {
 	var cfg Config
-	data, err := os.ReadFile(configFileName)
+	configFilePath := getConfigFilePath()
+	data, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return cfg, err
 	}
@@ -202,4 +207,18 @@ func generateBashCommand(description string) (string, error) {
 	}
 
 	return resp.Choices[0].Message.Content, nil
+}
+
+func getConfigFilePath() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("Error finding home directory: %v", err)
+	}
+
+	configDir := filepath.Join(homeDir, configDirectoryName)
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		log.Fatalf("Error creating config directory: %v", err)
+	}
+
+	return filepath.Join(configDir, configFileName)
 }
