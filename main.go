@@ -57,10 +57,10 @@ func main() {
 			os.Exit(1)
 		}
 
+		fmt.Println(bashCommand)
+
 		if *execute {
 			executeBashCommand(bashCommand)
-		} else {
-			fmt.Println(bashCommand)
 		}
 	}
 
