@@ -68,15 +68,24 @@ func main() {
 
 func handleConfigSubcommand(configCmd *flag.FlagSet, apiToken *string, model *string) {
 	configCmd.Parse(os.Args[2:])
-	if *apiToken == "" || *model == "" {
-		fmt.Println("You must provide both an API token and a model to configure the tool.")
+	fmt.Printf("apiToken: %s\n", *apiToken)
+
+	if *apiToken == "" {
+		fmt.Println("You must provide an OpenAI API token")
 		os.Exit(1)
 	}
+
+	modelValue := "gpt-3.5-turbo"
+
+	if *model != "" {
+		modelValue = *model
+	}
+
 	cfg := Config{
 		OpenAIAPIToken: *apiToken,
-		Model:          *model,
+		Model:          modelValue,
 	}
-	err := SaveConfig(cfg)
+	err := saveConfig(cfg)
 	if err != nil {
 		fmt.Printf("Error saving configuration: %s\n", err)
 		os.Exit(1)
@@ -85,7 +94,7 @@ func handleConfigSubcommand(configCmd *flag.FlagSet, apiToken *string, model *st
 }
 
 // SaveConfig saves the configuration to a file.
-func SaveConfig(cfg Config) error {
+func saveConfig(cfg Config) error {
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
@@ -94,7 +103,7 @@ func SaveConfig(cfg Config) error {
 }
 
 // LoadConfig loads the configuration from a file.
-func LoadConfig() (Config, error) {
+func loadConfig() (Config, error) {
 	var cfg Config
 	data, err := os.ReadFile(configFileName)
 	if err != nil {
@@ -144,7 +153,7 @@ func executeBashCommand(commandStr string) {
 }
 
 func generateBashCommand(description string) (string, error) {
-	cfg, err := LoadConfig()
+	cfg, err := loadConfig()
 	if err != nil {
 		fmt.Printf("Error loading configuration: %s\n", err)
 		return "", err
@@ -165,7 +174,7 @@ func generateBashCommand(description string) (string, error) {
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
-					Content: "description='Remove all files starting with Screen in the current directory',previousError=''",
+					Content: "description='Remove all files starting with Screen in the current directory'",
 				},
 				{
 					Role:    openai.ChatMessageRoleAssistant,
@@ -173,7 +182,7 @@ func generateBashCommand(description string) (string, error) {
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
-					Content: "description='show the content for file named test.txt',previousError=''",
+					Content: "description='show the content for file named test.txt'",
 				},
 				{
 					Role:    openai.ChatMessageRoleAssistant,
