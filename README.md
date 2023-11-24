@@ -64,8 +64,29 @@ Generate a command with genshell by providing a description:
 ```
 
 To execute the generated command directly, include the -e flag:
+
 ```sh
 ./genshell -e "describe your command here"
+```
+
+## Examples
+
+Below are some examples of how you can use genshell to generate and execute shell commands:
+
+```sh
+./genshell -e "show disk usage in human-readable format"
+```
+
+```sh
+./genshell "move all .jpg files to the 'images' directory"
+```
+
+```sh
+./genshell -e "zip the contents of 'documents' folder into 'archive.zip'"
+```
+
+```sh
+./genshell "list all running processes"
 ```
 
 ## Contributing
