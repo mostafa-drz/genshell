@@ -1,6 +1,6 @@
 # genshell
 
-`genshell` is a command-line interface (CLI) tool that utilizes OpenAI's ChatGPT to generate shell commands from natural language descriptions. This tool aims to bridge the gap between human language and shell commands, making it easier for users to perform tasks without needing to remember specific command syntax.
+`genshell` is a command-line interface (CLI) tool that utilizes OpenAI's ChatGPT to generate shell commands based on your operating systems from natural language descriptions. This tool aims to bridge the gap between human language and shell commands, making it easier for users to perform tasks without needing to remember specific command syntax.
 
 ## Disclaimer
 
@@ -8,7 +8,7 @@ Before using `genshell`, please note the following:
 
 - `genshell` generates shell commands based on the descriptions provided by the user, utilizing OpenAI's ChatGPT model.
 - Users should exercise caution and review each command thoroughly before execution to ensure it aligns with their intended actions.
-- The responsibility for any effects from executing the generated commands lies solely with the user. It is recommended to run commands in a safe, sandboxed environment when possible.
+- The responsibility for any effects from executing the generated commands lies solely with the user.
 - Users should be mindful of the information sent to ChatGPT, as it may contain sensitive data. Ensure no confidential or personal information is included in the descriptions.
 
 ## API Reference
@@ -46,13 +46,13 @@ To install `genshell` on your local machine, follow these steps:
 Set your OpenAI API key with the following command:
 
 ```sh
-./genshell config --set-open-ai-token "your_openai_api_key_here"
+./genshell config --api-token "your_openai_api_key_here"
 ```
 
 You can also specify the model you wish to use with genshell:
 
 ```sh
-./genshell config --set-model "model_name_here"
+./genshell config --model "model_name_here"
 ```
 
 ## Usage
@@ -60,12 +60,12 @@ You can also specify the model you wish to use with genshell:
 Generate a command with genshell by providing a description:
 
 ```sh
-./genshell -d "describe your command here"
+./genshell "describe your command here"
 ```
 
 To execute the generated command directly, include the -e flag:
 ```sh
-./genshell -e -d "describe your command here"
+./genshell -e "describe your command here"
 ```
 
 ## Contributing
