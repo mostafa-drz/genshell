@@ -3,16 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	openai "github.com/sashabaranov/go-openai"
+	"github.com/urfave/cli/v2"
 )
 
 type Config struct {
@@ -27,76 +26,66 @@ type ShellInfo struct {
 
 const configDirectoryName = ".genshell"
 const configFileName = "genshell_config.json"
-const githubRepositoryURL = "https://github.com/mostafa-drz/genshell"
 
 func main() {
-
-	help := flag.Bool("help", false, "Display help information")
-	execute := flag.Bool("e", false, "Execute the command")
-	flag.Parse()
-
-	// Subcommands
-	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
-	apiToken := configCmd.String("api-token", "", "Your OpenAI API token")
-	model := configCmd.String("model", "gpt-3.5-turbo", "The OpenAI model to use")
-
-	if *help {
-		displayHelp()
-		os.Exit(0)
+	app := &cli.App{
+		Name:  "genshell",
+		Usage: "A CLI tool to generate shell commands using OpenAI's ChatGPT",
+		Commands: []*cli.Command{
+			{
+				Name:   "config",
+				Usage:  "Configure OpenAI API token and model",
+				Action: handleConfigCommand,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "api-token",
+						Usage: "Your OpenAI API token",
+					},
+					&cli.StringFlag{
+						Name:  "model",
+						Usage: "The OpenAI model to use",
+					},
+				},
+			},
+		},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "execute",
+				Aliases: []string{"e"},
+				Usage:   "Execute the generated command",
+			},
+		},
+		ArgsUsage: "[command description]",
+		Action:    handleExecuteCommand,
 	}
 
-	// Check which subcommand is invoked.
-	if len(os.Args) < 2 {
-		log.Fatalf("expected 'config' subcommand or option '-e' '-h'")
-	}
-
-	switch os.Args[1] {
-	case "config":
-		handleConfigSubcommand(configCmd, apiToken, model)
-	default:
-		// The default case now assumes the remaining arguments are the description
-		description := strings.Join(flag.Args(), " ")
-		if description == "" {
-			log.Fatalf("expected a description for the command")
-		}
-
-		bashCommand, err := generateBashCommand(description)
-		if err != nil {
-			log.Fatalf("Error generating bash command: %s\n", err)
-		}
-
-		fmt.Println(bashCommand)
-
-		if *execute {
-			executeBashCommand(bashCommand)
-		}
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 }
 
-func handleConfigSubcommand(configCmd *flag.FlagSet, apiToken *string, model *string) {
-	configCmd.Parse(os.Args[2:])
-	fmt.Printf("apiToken: %s\n", *apiToken)
+func handleConfigCommand(c *cli.Context) error {
+	apiToken := c.String("api-token")
+	model := c.String("model")
 
-	if *apiToken == "" {
+	if apiToken == "" {
 		log.Fatalf("You must provide an OpenAI API token")
 	}
 
-	modelValue := "gpt-3.5-turbo"
-
-	if *model != "" {
-		modelValue = *model
-	}
-
 	cfg := Config{
-		OpenAIAPIToken: *apiToken,
-		Model:          modelValue,
+		OpenAIAPIToken: apiToken,
+		Model:          model,
 	}
+
 	err := saveConfig(cfg)
 	if err != nil {
 		log.Fatalf("Error saving configuration: %s\n", err)
 	}
+
 	fmt.Println("Configuration saved successfully.")
+	return nil
 }
 
 // SaveConfig saves the configuration to a file.
@@ -138,6 +127,26 @@ func getShellInfo() ShellInfo {
 			return ShellInfo{"sh", "Unix shell"} // default to sh if SHELL is not set
 		}
 	}
+}
+
+func handleExecuteCommand(c *cli.Context) error {
+	description := c.Args().First()
+	if description == "" {
+		log.Fatalf("expected a description for the command")
+	}
+
+	bashCommand, err := generateBashCommand(description)
+	if err != nil {
+		log.Fatalf("Error generating bash command: %s\n", err)
+	}
+
+	fmt.Println(bashCommand)
+
+	if c.Bool("execute") {
+		executeBashCommand(bashCommand)
+	}
+
+	return nil
 }
 
 func executeBashCommand(commandStr string) {
@@ -224,20 +233,4 @@ func getConfigFilePath() string {
 	}
 
 	return filepath.Join(configDir, configFileName)
-}
-
-// displayHelp prints the help information
-func displayHelp() {
-	fmt.Println("genshell - A CLI tool to generate shell commands using OpenAI's ChatGPT")
-	fmt.Println("\nUsage:")
-	fmt.Println("  genshell [options] \"command description\"")
-	fmt.Println("\nOptions:")
-	fmt.Println("  -e, --execute      Execute the generated command")
-	fmt.Println("  -h, --help         Display help information")
-	fmt.Println("  config             Configure OpenAI API token and model")
-	fmt.Println("\nExamples:")
-	fmt.Println("  genshell \"list all files in the current directory\"")
-	fmt.Println("  genshell -e \"create a new directory named 'test'\"")
-	fmt.Println("  genshell config --api-token \"your_api_token\" --model \"gpt-3.5-turbo\"")
-	fmt.Printf("\nFor more information, visit %s\n", githubRepositoryURL)
 }
