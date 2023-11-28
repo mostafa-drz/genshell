@@ -47,8 +47,7 @@ func main() {
 
 	// Check which subcommand is invoked.
 	if len(os.Args) < 2 {
-		fmt.Println("expected 'config' subcommand or options '-d' and '-e'")
-		os.Exit(1)
+		log.Fatalf("expected 'config' subcommand or option '-e' '-h'")
 	}
 
 	switch os.Args[1] {
@@ -58,14 +57,12 @@ func main() {
 		// The default case now assumes the remaining arguments are the description
 		description := strings.Join(flag.Args(), " ")
 		if description == "" {
-			fmt.Println("Please provide a description for the command.")
-			os.Exit(1)
+			log.Fatalf("expected a description for the command")
 		}
 
 		bashCommand, err := generateBashCommand(description)
 		if err != nil {
-			fmt.Printf("Error generating bash command: %s\n", err)
-			os.Exit(1)
+			log.Fatalf("Error generating bash command: %s\n", err)
 		}
 
 		fmt.Println(bashCommand)
@@ -82,8 +79,7 @@ func handleConfigSubcommand(configCmd *flag.FlagSet, apiToken *string, model *st
 	fmt.Printf("apiToken: %s\n", *apiToken)
 
 	if *apiToken == "" {
-		fmt.Println("You must provide an OpenAI API token")
-		os.Exit(1)
+		log.Fatalf("You must provide an OpenAI API token")
 	}
 
 	modelValue := "gpt-3.5-turbo"
@@ -98,8 +94,7 @@ func handleConfigSubcommand(configCmd *flag.FlagSet, apiToken *string, model *st
 	}
 	err := saveConfig(cfg)
 	if err != nil {
-		fmt.Printf("Error saving configuration: %s\n", err)
-		os.Exit(1)
+		log.Fatalf("Error saving configuration: %s\n", err)
 	}
 	fmt.Println("Configuration saved successfully.")
 }
