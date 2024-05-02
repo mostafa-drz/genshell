@@ -14,8 +14,7 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "precommit": "lint-staged",
-    "prepublish": "npm run build",
-    "publish": "npm publish --access public"
+    "prepublish": "npm run build"
   },
   "keywords": [
     "gemini",
