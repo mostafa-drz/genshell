@@ -17,6 +17,7 @@ interface ShellInfo {
 
 const configDirectoryName = '.genshell';
 const configFileName = 'genshell_config.json';
+const defaultModel = 'gemini-pro';
 
 const app = new Command();
 
@@ -29,7 +30,7 @@ app
   .command('config')
   .description('Configure Gemini API key and model')
   .requiredOption('--api-key <apiKey>', 'Your Gemini API key')
-  .requiredOption('--model <model>', 'The Gemini model to use')
+  .requiredOption('--model <model>', 'The Gemini model to use', defaultModel)
   .action(async (opts) => {
     const cfg: Config = {
       apiKey: opts.apiKey,
@@ -98,7 +99,7 @@ async function generateBashCommand(description: string): Promise<string> {
   const osName = os.platform();
   const geminiAPIKey = cfg.apiKey;
   const genAI = new GoogleGenerativeAI(geminiAPIKey);
-  const model = genAI.getGenerativeModel({ model: cfg?.model ?? 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: cfg?.model ?? defaultModel });
   const prompt = `
   You are a smart bot that can generate ${shellInfo.friendlyName} commands on ${osName} from a description provided by user. \
 
