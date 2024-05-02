@@ -1,0 +1,16 @@
+// .gitignore file for a Node.js Typescript project using eslint, prettier 
+
+# dependencies
+node_modules
+
+# production
+.dist
+
+# misc
+.DS_Store
+
+# IDE
+.vscode
+
+# local env files
+.env
