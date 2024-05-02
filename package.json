@@ -35,5 +35,9 @@
     "*.{js,jsx,ts,tsx}": [
       "npm run lint"
     ]
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.9.0",
+    "commander": "^12.0.0"
   }
 }
