@@ -1,8 +1,11 @@
 {
   "name": "genshell",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "A command-line interface (CLI) tool that utilizes Google's GeminiAPI  to generate shell commands from natural language descriptions",
-  "main": ".dist/index.js",
+  "main": "./dist/index.js",
+  "bin": {
+    "genshell": "./dist/index.js"
+  },
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",
