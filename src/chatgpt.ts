@@ -1,21 +1,15 @@
 import OpenAI from 'openai';
-import { ShellInfo, OsName } from './types';
+import { GenerateCommand } from './types';
 import { createPrompt } from './prompt';
 
 const DEFAULT_MODEL = 'gpt-3.5-turbo';
 
-export const generateCommand = async ({
+export const generateCommand: GenerateCommand = async ({
   apiKey,
   shellInfo,
   osName,
   description,
   model = DEFAULT_MODEL,
-}: {
-  apiKey: string;
-  shellInfo: ShellInfo;
-  osName: OsName;
-  description: string;
-  model?: string;
 }) => {
   const openai = new OpenAI({
     apiKey,

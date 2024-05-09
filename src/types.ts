@@ -9,3 +9,11 @@ export interface ShellInfo {
 }
 
 export type OsName = NodeJS.Platform;
+
+export type GenerateCommand = (params: {
+  apiKey: string;
+  shellInfo: ShellInfo;
+  osName: OsName;
+  description: string;
+  model?: string;
+}) => Promise<string | null>;

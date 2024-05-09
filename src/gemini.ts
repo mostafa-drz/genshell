@@ -1,21 +1,15 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ShellInfo, OsName } from './types';
+import { GenerateCommand } from './types';
 import { createPrompt } from './prompt';
 
 const DEFAULT_MODEL = 'gemini-pro';
 
-export const generateCommand = async ({
+export const generateCommand: GenerateCommand = async ({
   apiKey,
   shellInfo,
   osName,
   description,
   model = DEFAULT_MODEL,
-}: {
-  apiKey: string;
-  shellInfo: ShellInfo;
-  osName: OsName;
-  description: string;
-  model?: string;
 }) => {
   const genAI = new GoogleGenerativeAI(apiKey);
   const geminiModel = genAI.getGenerativeModel({ model: model ?? DEFAULT_MODEL });
