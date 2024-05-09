@@ -5,6 +5,7 @@ import path from 'path';
 import os from 'os';
 import { ShellInfo, Config } from './types';
 import * as gemini from './gemini';
+import * as chatgpt from './chatgpt';
 
 const configDirectoryName = '.genshell';
 const configFileName = 'genshell_config.json';
@@ -88,7 +89,7 @@ async function generateBashCommand(description: string): Promise<string> {
   const cfg = await loadConfig();
   const shellInfo = getShellInfo();
   const osName = os.platform();
-  const text = await gemini.generateBashCommand({
+  const text = await chatgpt.generateCommand({
     apiKey: cfg.apiKey,
     shellInfo,
     osName,

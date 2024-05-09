@@ -41,4 +41,12 @@ OS: ${osName}
 
 ## Output
 executable shell command or friendly message, no extra message in the execution output.
+
+### Example 1:
+Valid Output: gcloud projects list
+Invalid Output: "gcloud projects list"
+
+### Example 2:
+Valid Output: gcloud projects list
+Invalid Output: Here is your command "gcloud projects list"
 `;
