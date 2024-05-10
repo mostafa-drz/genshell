@@ -1,14 +1,14 @@
 {
   "name": "genshell",
   "version": "2.0.0-beta",
-  "description": "A command-line interface (CLI) tool that utilizes Google's GeminiAPI  to generate shell commands from natural language descriptions",
+  "description": "A command-line interface (CLI) tool that utilizes Google's GeminiAPI or OpenAI's ChatGPT API  to generate shell commands from natural language descriptions",
   "main": "./dist/index.js",
   "bin": {
     "genshell": "dist/index.js"
   },
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "prebuild": "rm -rf dist",
+    "clean": "rimraf dist node_modules",
     "build": "tsc",
     "postbuild": "node postBuild.js",
     "lint": "eslint . --ext .ts",
@@ -21,7 +21,12 @@
     "shell",
     "ai",
     "tools",
-    "genshell"
+    "genshell",
+    "cli",
+    "command-line",
+    "openai",
+    "google",
+    "chatgpt"
   ],
   "author": "@mostafa-drz",
   "license": "ISC",
@@ -34,6 +39,7 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
+    "rimraf": "^5.0.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
