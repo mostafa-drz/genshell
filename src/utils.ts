@@ -23,3 +23,8 @@ export function getShellInfo(): ShellInfo {
       }
   }
 }
+
+export const DEFAULT_MODEL_BY_PROVIDER = {
+  gemini: 'gemini-pro',
+  chatgpt: 'gpt-3.5-turbo',
+};
