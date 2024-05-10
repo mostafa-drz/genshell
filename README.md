@@ -37,16 +37,16 @@ genshell config update --profile-name <profileName> --api-key <apiKey> --model <
 genshell config list
 ```
 
-### Show Current Profile
+### Show active Profile
 
 ```sh
-genshell config current
+genshell config active
 ```
 
-### Switch Profile
+### activate a different Profile
 
 ```sh
-genshell config switch --profile-name <profileName>
+genshell config activate <profileName>
 ```
 
 ### Remove Profile
