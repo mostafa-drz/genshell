@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import { ConfigProfile, Provider } from './types';
 import { addProfile, getCurrentProfile, setCurrentProfile, removeProfile, listProfiles } from './configs';
-import { generateBashCommand, executeBashCommand } from './shell';
+import { generateShellCommand, executeShellCommand } from './shell';
 import { DEFAULT_MODEL_BY_PROVIDER } from './utils';
 
 const app = new Command();
@@ -80,11 +80,11 @@ app.arguments('<commandDescription>').action(async (commandDescription) => {
     console.error('Expected a description for the command.');
     process.exit(1);
   }
-  const command = await generateBashCommand(commandDescription);
+  const command = await generateShellCommand(commandDescription);
   console.log(command);
 
   if (app.opts().execute) {
-    executeBashCommand(command);
+    executeShellCommand(command);
   }
 });
 

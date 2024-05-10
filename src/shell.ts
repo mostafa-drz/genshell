@@ -5,7 +5,7 @@ import * as gemini from './gemini';
 import * as chatgpt from './chatgpt';
 import { getCurrentProfile } from './configs';
 
-export async function generateBashCommand(description: string): Promise<string> {
+export async function generateShellCommand(description: string): Promise<string> {
   const currentConfig = await getCurrentProfile();
   const shellInfo = getShellInfo();
   const osName = os.platform();
@@ -43,7 +43,7 @@ export async function generateBashCommand(description: string): Promise<string> 
   return command;
 }
 
-export function executeBashCommand(commandStr: string): void {
+export function executeShellCommand(commandStr: string): void {
   const shellInfo = getShellInfo();
   exec(`${shellInfo.executable} -c '${commandStr}'`, (error, stdout, stderr) => {
     if (error) {
