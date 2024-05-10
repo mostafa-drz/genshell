@@ -1,7 +1,7 @@
-export type Config = {
-  apiKey: string;
-  model: string;
-};
+export enum Provider {
+  chatgpt = 'chatgpt',
+  gemini = 'gemini',
+}
 
 export interface ShellInfo {
   executable: string;
@@ -17,3 +17,16 @@ export type GenerateCommand = (params: {
   description: string;
   model?: string;
 }) => Promise<string | null>;
+
+export interface ConfigProfile {
+  name: string;
+  apiKey: string;
+  model: string;
+  provider: Provider;
+}
+
+export type Config = {
+  [profileName: string]: ConfigProfile;
+} & {
+  currentProfile: string;
+};

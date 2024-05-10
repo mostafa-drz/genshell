@@ -1,15 +1,17 @@
 import { Command } from 'commander';
-import { promises as fs } from 'fs';
 import { exec } from 'child_process';
-import path from 'path';
 import os from 'os';
-import { ShellInfo, Config } from './types';
+import { ShellInfo, ConfigProfile, Provider } from './types';
 import * as gemini from './gemini';
 import * as chatgpt from './chatgpt';
-
-const configDirectoryName = '.genshell';
-const configFileName = 'genshell_config.json';
-const defaultModel = 'gemini-pro';
+import {
+  getCurrentProfile,
+  listProfiles,
+  setCurrentProfile,
+  addProfile,
+  removeProfile,
+  updateProfile,
+} from './configs';
 
 const app = new Command();
 
@@ -18,18 +20,91 @@ app
   .description("A CLI tool to generate shell commands using Gemini's AI model.")
   .option('-e, --execute', 'Execute the generated command');
 
-app
-  .command('config')
-  .description('Configure Gemini API key and model')
-  .requiredOption('--api-key <apiKey>', 'Your Gemini API key')
-  .requiredOption('--model <model>', 'The Gemini model to use', defaultModel)
+const config = app.command('config').description('Manage configuration profiles');
+
+// Add subcommand
+config
+  .command('add')
+  .description('Add a new profile')
+  .requiredOption('--profile-name <profileName>', 'Profile name')
+  .requiredOption('--api-key <apiKey>', 'API key')
+  .requiredOption('--model <model>', 'Model to use')
+  .requiredOption('--provider <provider>', 'Provider (chatgpt or gemini)')
   .action(async (opts) => {
-    const cfg: Config = {
+    const newProfile: ConfigProfile = {
+      name: opts.profileName,
       apiKey: opts.apiKey,
       model: opts.model,
+      provider: opts.provider as Provider,
     };
-    await saveConfig(cfg);
-    console.log('Configuration saved successfully.');
+    await addProfile(opts.profileName, newProfile);
+    console.log(`Added new profile: ${opts.profileName}`);
+  });
+
+// Update subcommand
+config
+  .command('update')
+  .description('Update an existing profile')
+  .requiredOption('--profile-name <profileName>', 'Profile name')
+  .option('--api-key <apiKey>', 'API key')
+  .option('--model <model>', 'Model to use')
+  .option('--provider <provider>', 'Provider (chatgpt or gemini)')
+  .action(async (opts) => {
+    const existingProfile = await getCurrentProfile();
+    if (!existingProfile) {
+      console.error(`Profile ${opts.profileName} does not exist.`);
+      process.exit(1);
+    }
+    const updatedProfile: ConfigProfile = {
+      name: opts.profileName,
+      apiKey: opts.apiKey || existingProfile.apiKey,
+      model: opts.model || existingProfile.model,
+      provider: opts.provider ? (opts.provider as Provider) : existingProfile.provider,
+    };
+    await updateProfile(opts.profileName, updatedProfile);
+    console.log(`Updated profile: ${opts.profileName}`);
+  });
+
+// List subcommand
+config
+  .command('list')
+  .description('List all profiles')
+  .action(async () => {
+    const profiles = await listProfiles();
+    console.log('Available profiles:', profiles);
+  });
+
+// Current subcommand
+config
+  .command('current')
+  .description('Show current profile')
+  .action(async () => {
+    const currentProfile = await getCurrentProfile();
+    if (currentProfile) {
+      console.log('Current profile:', currentProfile);
+    } else {
+      console.log('No current profile set.');
+    }
+  });
+
+// Switch subcommand
+config
+  .command('switch')
+  .description('Switch to a different profile')
+  .requiredOption('--profile-name <profileName>', 'Profile name to switch to')
+  .action(async (opts) => {
+    await setCurrentProfile(opts.profileName);
+    console.log(`Switched to profile: ${opts.profileName}`);
+  });
+
+// Remove subcommand
+config
+  .command('remove')
+  .description('Remove a profile')
+  .requiredOption('--profile-name <profileName>', 'Profile name to remove')
+  .action(async (opts) => {
+    await removeProfile(opts.profileName);
+    console.log(`Removed profile: ${opts.profileName}`);
   });
 
 app.arguments('<commandDescription>').action(async (commandDescription) => {
@@ -46,25 +121,6 @@ app.arguments('<commandDescription>').action(async (commandDescription) => {
 });
 
 app.parse(process.argv);
-
-async function saveConfig(cfg: Config): Promise<void> {
-  const data = JSON.stringify(cfg, null, 2);
-  const configFilePath = getConfigFilePath();
-  await fs.writeFile(configFilePath, data, { mode: 0o600 });
-}
-
-async function loadConfig(): Promise<Config> {
-  const configFilePath = getConfigFilePath();
-  const data = await fs.readFile(configFilePath, 'utf-8');
-  return JSON.parse(data) as Config;
-}
-
-function getConfigFilePath(): string {
-  const homeDir = os.homedir();
-  const configDir = path.join(homeDir, configDirectoryName);
-  fs.mkdir(configDir, { recursive: true, mode: 0o700 });
-  return path.join(configDir, configFileName);
-}
 
 function getShellInfo(): ShellInfo {
   switch (os.platform()) {
@@ -86,20 +142,41 @@ function getShellInfo(): ShellInfo {
 }
 
 async function generateBashCommand(description: string): Promise<string> {
-  const cfg = await loadConfig();
+  const currentConfig = await getCurrentProfile();
   const shellInfo = getShellInfo();
   const osName = os.platform();
-  const text = await chatgpt.generateCommand({
-    apiKey: cfg.apiKey,
-    shellInfo,
-    osName,
-    description,
-    model: cfg.model,
-  });
-  if (typeof text !== 'string') {
+  if (!currentConfig) {
+    console.error('Please configure your API key and model first.');
+    process.exit(1);
+  }
+
+  let command;
+  switch (currentConfig.provider) {
+    case 'gemini':
+      command = await gemini.generateCommand({
+        description,
+        shellInfo,
+        osName,
+        apiKey: currentConfig.apiKey,
+        model: currentConfig.model,
+      });
+      break;
+    case 'chatgpt':
+      command = await chatgpt.generateCommand({
+        description,
+        shellInfo,
+        osName,
+        apiKey: currentConfig.apiKey,
+        model: currentConfig.model,
+      });
+    default:
+      throw new Error('Invalid provider.');
+  }
+
+  if (typeof command !== 'string') {
     return 'No command generated.';
   }
-  return text;
+  return command;
 }
 
 function executeBashCommand(commandStr: string): void {
