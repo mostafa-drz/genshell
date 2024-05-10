@@ -28,3 +28,9 @@ export const DEFAULT_MODEL_BY_PROVIDER = {
   gemini: 'gemini-pro',
   chatgpt: 'gpt-3.5-turbo',
 };
+
+export const GENERATION_CONFIG = {
+  maxToken: 200,
+  temperature: 0.6,
+  topP: 0.9,
+};
