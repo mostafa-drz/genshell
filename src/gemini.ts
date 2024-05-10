@@ -1,8 +1,27 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { GenerateCommand } from './types';
 import { createPrompt } from './prompt';
 
 const DEFAULT_MODEL = 'gemini-pro';
+
+const SAFETY_SETTINGS = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+];
 
 export const generateCommand: GenerateCommand = async ({
   apiKey,
@@ -12,7 +31,7 @@ export const generateCommand: GenerateCommand = async ({
   model = DEFAULT_MODEL,
 }) => {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const geminiModel = genAI.getGenerativeModel({ model: model ?? DEFAULT_MODEL });
+  const geminiModel = genAI.getGenerativeModel({ model: model ?? DEFAULT_MODEL, safetySettings: SAFETY_SETTINGS });
   const prompt = createPrompt({ shellInfo, osName, description });
   const result = await geminiModel.generateContent(prompt);
   const response = await result.response;
