@@ -1,45 +1,97 @@
 # Genshell
 
-Genshell is a command-line interface (CLI) tool that leverages Google's Gemini API to generate shell commands from natural language descriptions. This tool simplifies the task of generating shell-specific commands by interpreting user inputs and converting them into executable commands.
+Genshell is a CLI tool that generates shell commands from natural language descriptions using AI models (Google's Gemini and OpenAI's ChatGPT).
 
-## Requirements
+## Features
 
-Genshell requires Node.js to run. Ensure that Node.js is installed on your system before installing and using Genshell. You can download and install Node.js from [nodejs.org](https://nodejs.org/).
+- Generate shell commands using natural language descriptions.
+- Support for multiple AI providers (Gemini and ChatGPT).
+- Configurable profiles to switch between different API keys and models.
+- Supports various shell environments (Bash, Zsh, Fish, PowerShell).
 
 ## Installation
 
-Install Genshell globally using npm:
-
-```bash
+```sh
 npm install -g genshell
 ```
 
-This will allow you to use the genshell command anywhere on your system.
-
 ## Configuration
 
-Before using Genshell, you need to configure it with your Gemini API key and the model you intend to use. This is done through the config command:
+You can configure multiple profiles and switch between them.
 
-```bash
-genshell config --api-key YOUR_API_KEY --model gemini-pro
+### Add a Profile
+
+```sh
+genshell config add --profile-name <profileName> --api-key <apiKey> --model <model> --provider <provider>
 ```
 
-The default model is gemini-pro, but you can specify other models supported by the Gemini API.
+### Update a Profile
+
+```sh
+genshell config update --profile-name <profileName> --api-key <apiKey> --model <model> --provider <provider>
+```
+
+### List Profiles
+
+```sh
+genshell config list
+```
+
+### Show Current Profile
+
+```sh
+genshell config current
+```
+
+### Switch Profile
+
+```sh
+genshell config switch --profile-name <profileName>
+```
+
+### Remove Profile
+
+```sh
+genshell config remove --profile-name <profileName>
+```
 
 ## Usage
 
-```bash
-genshell "List all files in the current directory"
-// ls -al
+To generate a shell command:
+
+```sh
+genshell "description of the command"
 ```
 
-```bash
-genshell "List all my Google cloud projects"
-// gcloud projects list
+To generate and execute the command:
+
+```sh
+genshell "description of the command" --execute
 ```
 
-If you want to execute the generated command directly, you can append the --execute flag:
+## Examples
 
-```bash
-genshell -e "Print the current date"
+```sh
+genshell "list all files in the current directory"
+# Output: ls -al
+
+genshell "create a new directory named 'my-dir'"
+# Output: mkdir my-dir
 ```
+
+## Profile Details
+
+### Providers
+
+- `chatgpt`: Use OpenAI's ChatGPT for generating shell commands.
+- `gemini`: Use Google's Gemini for generating shell commands.
+
+### Models
+
+#### For ChatGPT
+
+Check [here](https://platform.openai.com/docs/guides/text-generation) for a list of supported models by OpenAI API.
+
+#### For Gemini
+
+Check [here](https://ai.google.dev/gemini-api/docs/models/gemini) for a list of supported models by Gemini API.
