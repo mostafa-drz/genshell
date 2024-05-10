@@ -1,6 +1,6 @@
 {
   "name": "genshell",
-  "version": "2.0.0-beta-2",
+  "version": "2.0.0",
   "description": "A command-line interface (CLI) tool that utilizes Google's GeminiAPI or OpenAI's ChatGPT API  to generate shell commands from natural language descriptions",
   "main": "./dist/index.js",
   "bin": {
